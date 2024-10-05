@@ -66,7 +66,7 @@ RUN pip3 install flower
 RUN pip3 install requests
 RUN pip3 install psycopg2-binary
 
-COPY ./rt_vision_backend /home/$user/src/
+COPY . /home/$user/src/
 COPY ./supervisord.conf /etc/supervisord.conf
 COPY ./entrypoint.sh /home/
 RUN /bin/bash -c "chown -R $user:$user /home/"
