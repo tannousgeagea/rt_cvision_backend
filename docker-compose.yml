@@ -25,6 +25,8 @@ services:
     volumes:
       - .:/home/$user/src
     user: ${user}
+    depends_on:
+      - postgres
 
   postgres:
     image: postgres:latest

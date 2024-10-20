@@ -10,7 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from django.templatetags.static import static
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,18 +30,22 @@ SECRET_KEY = 'django-insecure-qy!ps8i)l@f3dgiwrjdq_0dqn)l@(7v8)epp!#fy*c&09=)+@8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [os.getenv('ALLOWED_HOST', '0.0.0.0')]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'unfold',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'users',
+    'tenants',
+    'metadata',
 ]
 
 MIDDLEWARE = [
@@ -50,6 +59,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'rt_cvision_backend.urls'
+AUTH_USER_MODEL = "users.CustomUser"
 
 TEMPLATES = [
     {
@@ -75,8 +85,13 @@ WSGI_APPLICATION = 'rt_cvision_backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.environ.get('DATABASE_ENGINE', "django.db.backends.sqlite3"),
+        'NAME': os.environ.get('DATABASE_NAME') if not 'sqlite3' in os.environ.get('DATABASE_ENGINE') else BASE_DIR / 'db.sqlite3',
+        'USER': os.environ.get('DATABASE_USER'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWD'),
+        'HOST': os.environ.get('DATABASE_HOST'),
+        'PORT': os.environ.get('DATABASE_PORT')
+
     }
 }
 
@@ -116,8 +131,136 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+UNFOLD = {
+    "SITE_HEADER": _("RTCVision"),
+    "SITE_TITLE": _("Reat-Time Computer Vision"),
+    "SITE_SYMBOL": "RTCVision",
+    "SITE_ICON": {
+        "light": lambda request: static("icon-light.svg"),  # light mode
+        "dark": lambda request: static("icon-dark.svg"),  # dark mode
+    },
+    "SITE_LOGO": lambda request: static("images/logo.jpg"),  # both modes, optimise for 32px height
+    # "SITE_LOGO": {
+    #     "light": lambda request: static("logo-light.svg"),  # light mode
+    #     "dark": lambda request: static("logo-dark.svg"),  # dark mode
+    # },
+    "SITE_SYMBOL": "speed",  # symbol from icon set
+    "SITE_FAVICONS": [
+        {
+            "rel": "icon",
+            "sizes": "46x32",
+            "type": "image/svg+xml",
+            "href": lambda request: static("favicon.svg"),
+        },
+    ],
+    "SHOW_HISTORY": True, # show/hide "History" button, default: True
+    "SHOW_VIEW_ON_SITE": True, # show/hide "View on site" button, default: True
+    # "THEME": "dark", # Force theme: "dark" or "light". Will disable theme switcher
+    "LOGIN": {
+        "image": lambda request: static("images/login.jpeg"),
+        "redirect_after": lambda request: reverse_lazy("admin:tenants_tenant_changelist"),
+    },
+    "EXTENSIONS": {
+        "modeltranslation": {
+            "flags": {
+                "de": "🇩🇪",
+                "en": "🇬🇧",
+                "fr": "🇫🇷",
+                "nl": "🇧🇪",
+            },
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": _("Navigation"),
+                "items": [
+                    {
+                        "title": _("All Apps"),
+                        "icon": "dashboard",
+                        "link": reverse_lazy("admin:index"),
+                    },
+                ]
+            },
+            {
+                "title": _("Tenant"),
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Tenant"),
+                        "icon": 'tenancy',
+                        "link": reverse_lazy(
+                            "admin:tenants_tenant_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Plant"),
+                        "icon": 'local_fire_department',
+                        "link": reverse_lazy(
+                            "admin:tenants_plant_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Domain"),
+                        "icon": 'domain',
+                        "link": reverse_lazy(
+                            "admin:tenants_domain_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Service Instance"),
+                        "icon": 'design_services',
+                        "link": reverse_lazy(
+                            "admin:tenants_serviceinstance_changelist"
+                        ),
+                    },
+                ]
+            },
+            {
+                "title": _("Users & Groups"),
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Users"),
+                        "icon": "person",
+                        "link": reverse_lazy(
+                            "admin:users_customuser_changelist"
+                            ),
+                    },
+                    {
+                        "title": _("Groups"),
+                        "icon": "group",
+                        "link": reverse_lazy(
+                            "admin:auth_group_changelist"
+                            ),
+                    }
+                ],
+            },
+            {
+                "title": _("MetaData"),
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Languages"),
+                        "icon": "language",
+                        "link": reverse_lazy(
+                            "admin:metadata_language_changelist"
+                        ),
+                    },
+                ],
+            },
+ 
+        ],
+    },
+}

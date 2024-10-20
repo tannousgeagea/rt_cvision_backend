@@ -65,6 +65,8 @@ RUN pip3 install celery
 RUN pip3 install flower
 RUN pip3 install requests
 RUN pip3 install psycopg2-binary
+RUN pip3 install django-unfold
+RUN pip3 install whitenoise
 
 COPY . /home/$user/src/
 COPY ./supervisord.conf /etc/supervisord.conf
