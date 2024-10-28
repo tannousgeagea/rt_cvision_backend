@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users',
     'tenants',
+    'instances',
     'metadata',
 ]
 
@@ -218,11 +219,31 @@ UNFOLD = {
                             "admin:tenants_domain_changelist"
                         ),
                     },
+                ]
+            },
+            {
+                "title": _("Instances"),
+                "collapsible": True,
+                "items": [
                     {
-                        "title": _("Service Instance"),
+                        "title": _("Service Instances"),
                         "icon": 'design_services',
                         "link": reverse_lazy(
-                            "admin:tenants_serviceinstance_changelist"
+                            "admin:instances_serviceinstance_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("API Control"),
+                        "icon": 'api',
+                        "link": reverse_lazy(
+                            "admin:instances_apicontrol_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Endpoints"),
+                        "icon": 'network_node',
+                        "link": reverse_lazy(
+                            "admin:instances_endpoint_changelist"
                         ),
                     },
                 ]
