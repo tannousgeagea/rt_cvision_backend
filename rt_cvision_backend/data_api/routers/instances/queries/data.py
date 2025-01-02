@@ -98,7 +98,7 @@ def get_services(
             data.append(
                 {
                     "id": service.instance_name,
-                    "service_name": service.instance_name,
+                    "name": service.instance_name,
                     "status": service.status,
                     "is_active": service.is_active, 
                 }

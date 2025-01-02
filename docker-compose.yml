@@ -32,6 +32,7 @@ services:
     image: postgres:latest
     container_name: rt-cvision-backend-postgres
     env_file: .env
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWD}
