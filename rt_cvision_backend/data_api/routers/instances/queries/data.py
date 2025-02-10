@@ -89,8 +89,7 @@ def get_services(
                 tenant_id=tenant_id
             )
         )
-        
-        print(plant)
+
         services = ServiceInstance.objects.filter(
             plant=plant
         )
