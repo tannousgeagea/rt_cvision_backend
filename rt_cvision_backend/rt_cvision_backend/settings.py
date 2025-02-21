@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'tenants',
     'instances',
     'metadata',
+    'upstreams',
 ]
 
 MIDDLEWARE = [
@@ -144,27 +145,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 UNFOLD = {
     "SITE_HEADER": _("RTCVision"),
     "SITE_TITLE": _("Reat-Time Computer Vision"),
-    "SITE_SYMBOL": "RTCVision",
-    "SITE_ICON": {
-        "light": lambda request: static("icon-light.svg"),  # light mode
-        "dark": lambda request: static("icon-dark.svg"),  # dark mode
-    },
-    "SITE_LOGO": lambda request: static("images/logo.jpg"),  # both modes, optimise for 32px height
+    "SITE_SYMBOL": "eye_tracking",
+    # "SITE_ICON": {
+    #     "light": lambda request: static("icon-light.svg"),  # light mode
+    #     "dark": lambda request: static("icon-dark.svg"),  # dark mode
+    # },
+    # "SITE_LOGO": lambda request: static("images/logo.jpg"),  # both modes, optimise for 32px height
     # "SITE_LOGO": {
     #     "light": lambda request: static("logo-light.svg"),  # light mode
     #     "dark": lambda request: static("logo-dark.svg"),  # dark mode
     # },
-    "SITE_SYMBOL": "speed",  # symbol from icon set
-    "SITE_FAVICONS": [
-        {
-            "rel": "icon",
-            "sizes": "46x32",
-            "type": "image/svg+xml",
-            "href": lambda request: static("favicon.svg"),
-        },
-    ],
+    # "SITE_FAVICONS": [
+    #     {
+    #         "rel": "icon",
+    #         "sizes": "46x32",
+    #         "type": "image/svg+xml",
+    #         "href": lambda request: static("favicon.svg"),
+    #     },
+    # ],
     "SHOW_HISTORY": True, # show/hide "History" button, default: True
-    "SHOW_VIEW_ON_SITE": True, # show/hide "View on site" button, default: True
+    # "SHOW_VIEW_ON_SITE": True, # show/hide "View on site" button, default: True
     # "THEME": "dark", # Force theme: "dark" or "light". Will disable theme switcher
     "LOGIN": {
         "image": lambda request: static("images/login.jpeg"),
@@ -244,6 +244,26 @@ UNFOLD = {
                         "icon": 'network_node',
                         "link": reverse_lazy(
                             "admin:instances_endpoint_changelist"
+                        ),
+                    },
+                ]
+            },
+            {
+                "title": _("Upstreams"),
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Upstream Definition"),
+                        "icon": 'api',
+                        "link": reverse_lazy(
+                            "admin:upstreams_upstreamdefinition_changelist"
+                        ),
+                    },
+                    {
+                        "title": _("Service Upstreams"),
+                        "icon": 'network_node',
+                        "link": reverse_lazy(
+                            "admin:upstreams_serviceupstream_changelist"
                         ),
                     },
                 ]

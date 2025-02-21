@@ -19,19 +19,19 @@ class ServiceInstance(models.Model):
         unique_together = ('plant', 'instance_name')
 
     def __str__(self):
-        return f'{self.service_name} - {self.instance_name}'
+        return f'{self.plant.plant_name}: {self.instance_name}'
 
 class APIControl(models.Model):
     service_instance = models.OneToOneField(ServiceInstance, on_delete=models.CASCADE, related_name='api_control')
     api_token = models.CharField(max_length=255, null=True, blank=True)
-    rate_limit = models.IntegerField(default=1000)  # Example field for API rate limiting
+    rate_limit = models.IntegerField(default=1000)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'api_control'
         verbose_name = "API Control"
         verbose_name_plural = "API Controls"
-        ordering = ['service_instance']  # Orders by the service instance name
+        ordering = ['service_instance']
 
     def __str__(self):
         return f'API Control for {self.service_instance.instance_name}'
@@ -39,7 +39,7 @@ class APIControl(models.Model):
 class Endpoint(models.Model):
     # api_control = models.ForeignKey(APIControl, on_delete=models.CASCADE, related_name='endpoints')
     name = models.CharField(max_length=100, unique=True)
-    route = models.CharField(max_length=255)  # The specific route, e.g., "/data", "/status"
+    route = models.CharField(max_length=255)
     method = models.CharField(max_length=10, choices=[('GET', 'GET'), ('POST', 'POST'), ('PUT', 'PUT'), ('DELETE', 'DELETE')], default='GET')
     description = models.TextField(blank=True, null=True, help_text="Description of what this endpoint does")
     is_active = models.BooleanField(default=True)

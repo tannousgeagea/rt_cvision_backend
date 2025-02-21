@@ -2,6 +2,7 @@ from django.contrib import admin
 from unfold.admin import ModelAdmin
 from unfold.admin import TabularInline, StackedInline
 from .models import ServiceInstance, APIControl, Endpoint
+from upstreams.models import ServiceUpstream
 
 class APIControlInline(TabularInline):
     model = APIControl
@@ -16,14 +17,17 @@ class EndpointInline(TabularInline):
     fields = ('route', 'method', 'description', 'is_active')
     show_change_link = True  # Enables link to view/edit Endpoint details
 
+class ServiceUpstreamInline(TabularInline):
+    model = ServiceUpstream
+
 # Register your models here.
 @admin.register(ServiceInstance)
 class ServiceInstanceAdmin(ModelAdmin):
-    list_display = ('plant', 'service_name', 'instance_name', 'api_base_url', 'status', 'is_active', 'created_at')
+    list_display = ('id', 'plant', 'instance_name', 'api_base_url', 'status', 'is_active', 'created_at')
     list_filter = ('status', 'is_active')
     search_fields = ('service_name', 'instance_name')
     ordering = ('instance_name',)
-    inlines = [APIControlInline]
+    inlines = [ServiceUpstreamInline, APIControlInline]
 
 @admin.register(APIControl)
 class APIControlAdmin(ModelAdmin):
