@@ -61,7 +61,11 @@ def get_instance_and_upstream(service_instance_id: str, upstream_name: str) -> d
         "api_base_url": api_base_url,
         "default_route": route_path,
         "custom_route": None,
-        "method": method
+        "method": method,
+        "id": service_instance_id,
+        "name": service_instance.instance_name,
+        "status": "active" if service_instance.is_active else "inactive",
+        "description": service_instance.description,
     }
 
 @router.api_route(
@@ -102,7 +106,11 @@ async def proxy_request(service_instance_id: str, upstream_name: str, request: R
         except httpx.HTTPError as exc:
             raise HTTPException(status_code=502, detail=f"Error forwarding request: {exc}")
 
-    return response.json()
+    results = {
+        **config,
+        "data": response.json()["data"]
+    }
+    return results
 
 if __name__ == "__main__":
     import uvicorn

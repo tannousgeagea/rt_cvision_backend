@@ -60,6 +60,7 @@ def get_tenants(
         for tenant in tenants:
             data.append(
                 {
+                    "id": tenant.id,
                     "tenant_id": tenant.tenant_id,
                     "tenant_name": tenant.name, 
                 }

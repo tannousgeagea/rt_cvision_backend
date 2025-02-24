@@ -7,6 +7,7 @@ class ServiceInstance(models.Model):
     service_name = models.CharField(max_length=255)
     instance_name = models.CharField(max_length=255)
     api_base_url = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True, help_text="Description of the instance")
     status = models.CharField(max_length=50, choices=[('running', 'Running'), ('stopped', 'Stopped')], default='stopped')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
