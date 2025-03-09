@@ -62,7 +62,8 @@ def get_tenants(
                 {
                     "id": tenant.id,
                     "tenant_id": tenant.tenant_id,
-                    "tenant_name": tenant.name, 
+                    "name": tenant.name,
+                    "location": tenant.location,
                 }
             )
                 

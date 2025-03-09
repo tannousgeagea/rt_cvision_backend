@@ -7,7 +7,7 @@ from jose import jwt
 import os
 
 # Django settings for JWT
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")  # Use Django's secret key or create a separate key
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 ALGORITHM = "HS256"
 
 router = APIRouter()

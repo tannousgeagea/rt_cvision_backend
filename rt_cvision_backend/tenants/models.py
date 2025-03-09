@@ -7,6 +7,7 @@ from metadata.models import (
 class Tenant(models.Model):
     tenant_id = models.CharField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
+    location = models.CharField(max_length=255, null=True, blank=True)
     default_language = models.ForeignKey(Language, models.RESTRICT)
     is_active = models.BooleanField(default=True, help_text="Indicates if the filter is currently active.")
     created_at = models.DateTimeField(auto_now_add=True)

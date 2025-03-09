@@ -80,10 +80,6 @@ async def proxy_request(service_instance_id: str, upstream_name: str, request: R
     route_path = config.get("custom_route") or config.get("default_route")
     target_url = config["api_base_url"].rstrip("/") + route_path
 
-    # Extract method, query parameters, headers, and body from the incoming request.
-
-    print(request.method)
-
     method = request.method
     params = dict(request.query_params)
     headers = dict(request.headers)
@@ -100,15 +96,22 @@ async def proxy_request(service_instance_id: str, upstream_name: str, request: R
                 headers=headers,
                 params=params,
                 content=body,
-                timeout=10.0
+                timeout=20.0
             )
             response.raise_for_status()
+
+            print(response.text)
         except httpx.HTTPError as exc:
             raise HTTPException(status_code=502, detail=f"Error forwarding request: {exc}")
 
+    try:
+        data = response.json()["data"]
+    except:
+        data = response.json()
+
     results = {
         **config,
-        "data": response.json()["data"]
+        "data": data
     }
     return results
 
