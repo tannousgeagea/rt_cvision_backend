@@ -15,10 +15,13 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
+from django.db.models import Prefetch
+from django.utils.timesince import timesince
 
 django.setup()
 from django.core.exceptions import ObjectDoesNotExist
 from tenants.models import Tenant
+from instances.models import ServiceInstance
 
 class TimedRoute(APIRoute):
     def get_route_handler(self) -> Callable:
@@ -56,7 +59,9 @@ def get_tenants(
     results = {}
     try:
         data = []
-        tenants = Tenant.objects.filter(is_active=True)
+        tenants = Tenant.objects.prefetch_related(
+            Prefetch('services', queryset=ServiceInstance.objects.all())
+        ).filter(is_active=True)
         for tenant in tenants:
             data.append(
                 {
@@ -64,6 +69,14 @@ def get_tenants(
                     "tenant_id": tenant.tenant_id,
                     "name": tenant.name,
                     "location": tenant.location,
+                    "logo": tenant.logo_url,
+                    "activeServices": tenant.services.filter(is_active=True).count(),
+                    "totalServices": tenant.services.count(),
+                    "status": "active" if tenant.is_active else "inactive",
+                    "lastActivity": timesince(tenant.last_activity) + " ago" if tenant.last_activity else None,
+                    "description": tenant.description,
+                    "region": tenant.region,
+                    "plan": tenant.plan,
                 }
             )
                 

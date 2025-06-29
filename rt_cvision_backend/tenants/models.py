@@ -1,7 +1,24 @@
 from django.db import models
+import pytz
 from metadata.models import (
     Language
 )
+
+
+REGION_TIMEZONE_MAP = {
+    'US-East': 'America/New_York',
+    'US-West': 'America/Los_Angeles',
+    'EU-West': 'Europe/London',
+    'EU-Central': 'Europe/Berlin',
+    'Asia-Pacific': 'Asia/Singapore',
+    'Middle-East': 'Asia/Dubai',
+}
+REGION_CHOICES = [(key, key) for key in REGION_TIMEZONE_MAP.keys()]
+PLAN_CHOICES = [
+    ("starter", "Starter"),
+    ("professional", "Professional"),
+    ("enterprise", "Enterprise"),
+]
 
 # Create your models here.
 class Tenant(models.Model):
@@ -11,7 +28,31 @@ class Tenant(models.Model):
     default_language = models.ForeignKey(Language, models.RESTRICT)
     is_active = models.BooleanField(default=True, help_text="Indicates if the filter is currently active.")
     created_at = models.DateTimeField(auto_now_add=True)
-    
+    meta_info = models.JSONField(null=True, blank=True)
+
+    logo_url = models.URLField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    region = models.CharField(
+        max_length=100,
+        choices=REGION_CHOICES,
+        null=True,
+        blank=True,
+        help_text="Region tag for UI filtering (e.g., US-East)"
+    )
+    plan = models.CharField(
+        max_length=50,
+        choices=PLAN_CHOICES,
+        default="starter",
+        help_text="Subscription plan tier"
+    )
+    last_activity = models.DateTimeField(null=True, blank=True)
+    timezone = models.CharField(
+        max_length=50,
+        choices=[(tz, tz) for tz in pytz.all_timezones],
+        default="Europe/Berlin",
+        help_text="Timezone for the tenant"
+    )
+
     class Meta:
         db_table = 'tenant'
         verbose_name = "Tenant"
@@ -31,6 +72,30 @@ class Plant(models.Model):
     language = models.ForeignKey(Language, models.RESTRICT)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    meta_info = models.JSONField(null=True, blank=True)
+
+    logo_url = models.URLField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    region = models.CharField(
+        max_length=100,
+        choices=REGION_CHOICES,
+        null=True,
+        blank=True,
+        help_text="Region tag for UI filtering (e.g., US-East)"
+    )
+    plan = models.CharField(
+        max_length=50,
+        choices=PLAN_CHOICES,
+        default="starter",
+        help_text="Subscription plan tier"
+    )
+    last_activity = models.DateTimeField(null=True, blank=True)
+    timezone = models.CharField(
+        max_length=50,
+        choices=[(tz, tz) for tz in pytz.all_timezones],
+        default="Europe/Berlin",
+        help_text="Timezone for the tenant"
+    )
 
     class Meta:
         db_table = "plant"

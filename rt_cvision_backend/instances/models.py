@@ -1,8 +1,9 @@
 from django.db import models
-from tenants.models import Plant
+from tenants.models import Plant, Tenant
 
 # Create your models here.
 class ServiceInstance(models.Model):
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="services", null=True, blank=True)
     plant = models.ForeignKey(Plant, on_delete=models.CASCADE, related_name='services')
     service_name = models.CharField(max_length=255)
     instance_name = models.CharField(max_length=255)
