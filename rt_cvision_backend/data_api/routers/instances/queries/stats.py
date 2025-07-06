@@ -15,6 +15,7 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
+from django.db.models import Prefetch
 
 django.setup()
 from django.core.exceptions import ObjectDoesNotExist
@@ -41,25 +42,18 @@ router = APIRouter(
     route_class=TimedRoute,
 )
 
-description = """
-
-    URL Path: /instances
-
-    TO DO
-"""
-
 @router.api_route(
-    "/instances/{tenant_id}", methods=["GET"], tags=["Instances"], description=description,
+    "/instances/{tenant_id}/stats", methods=["GET"],
 )
-def get_services(
+def get_instances_stats_per_tenant(
     response: Response,
-    tenant_id: str, 
-    ):
+    tenant_id: str,
+):
     results = {}
     try:
-        data = []
-        
-        tenant = Tenant.objects.filter(tenant_id=tenant_id).first()
+        tenant = Tenant.objects.prefetch_related(
+            Prefetch('services', queryset=ServiceInstance.objects.all())
+        ).filter(is_active=True, tenant_id=tenant_id).first()
         if not tenant:
             results = {
                 "error": {
@@ -71,51 +65,17 @@ def get_services(
             
             response.status_code = status.HTTP_404_NOT_FOUND
             return results
-        
-        if not Plant.objects.filter(tenant__tenant_id=tenant_id).exists():
-            results = {
-                "error": {
-                    "status_code": "not found",
-                    "status_description": f"Plant for {tenant_id} not found",
-                    "detail":f"Plant for {tenant_id} not found",
-                }
-            }
-            
-            response.status_code = status.HTTP_404_NOT_FOUND
-            return results
 
-        services = ServiceInstance.objects.filter(
-            tenant=tenant
-        )
-        for service in services:
-            data.append(
-                {
-                    "id": service.pk,
-                    "name": service.instance_name,
-                    "status": "active" if service.is_active else "inactive",
-                    "description": service.description,
-                    "version": "v2.0.1",
-                    "environment": "development",
-                    "uptime": '15 days, 8 hours',
-                    "lastDeployed": '2025-01-10T14:30:00Z',
-                    "healthScore": 98,
-                    "cpu": 45,
-                    "memory": 62,
-                    "requests": 15420,
-                    "errors": 12,
-                    "tenantId": tenant.tenant_id,
-                    "is_active": service.is_active, 
-                }
-            )
-                
-                
         results = {
-            "status_code": "ok",
-            "detail": "data retrieved successfully",
-            "status_description": "OK",
-            "data": data
+            "totalServices": tenant.services.count(),
+            "activeServices": tenant.services.filter(is_active=True).count(),
+            "totalMicroservices": 5 * tenant.services.count(),
+            "runningMicroservices": 5 * tenant.services.filter(is_active=True).count(),
+            "avgHealthScore": 63.5,
+            "totalRequests": 1233,
+            "errorRate": 12,
         }
-        
+
     except ObjectDoesNotExist as e:
         results['error'] = {
             'status_code': "non-matching-query",
@@ -124,7 +84,7 @@ def get_services(
         }
 
         response.status_code = status.HTTP_404_NOT_FOUND
-        
+
     except HTTPException as e:
         results['error'] = {
             "status_code": "not found",
