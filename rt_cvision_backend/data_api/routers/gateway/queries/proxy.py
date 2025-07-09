@@ -85,8 +85,6 @@ async def proxy_request(service_instance_id: str, upstream_name: str, request: R
     headers = dict(request.headers)
     body = await request.body()
 
-
-    print(body)
     # Forward the request using HTTPX.
     async with httpx.AsyncClient() as client:
         try:

@@ -2,6 +2,7 @@ import os
 import time
 import math
 import django
+import httpx
 from django.db import connection
 from django.db.models import Q
 from fastapi import status
@@ -15,6 +16,7 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
+from commmon_utils.gateway.utils import get_instance_and_upstream, get_service_instance_per_tenant
 
 django.setup()
 from django.core.exceptions import ObjectDoesNotExist
@@ -51,60 +53,55 @@ description = """
 @router.api_route(
     "/instances/{tenant_id}", methods=["GET"], tags=["Instances"], description=description,
 )
-def get_services(
+async def get_services(
     response: Response,
     tenant_id: str, 
+    request: Request
     ):
     results = {}
     try:
         data = []
-        
-        tenant = Tenant.objects.filter(tenant_id=tenant_id).first()
-        if not tenant:
-            results = {
-                "error": {
-                    "status_code": "not found",
-                    "status_description": f"Tenant {tenant_id} not found",
-                    "detail": f"Tenant {Tenant} not found ! Existing options: {[tenant.tenant_id for tenant in Tenant.objects.all()]}",
-                }
-            }
-            
-            response.status_code = status.HTTP_404_NOT_FOUND
-            return results
-        
-        if not Plant.objects.filter(tenant__tenant_id=tenant_id).exists():
-            results = {
-                "error": {
-                    "status_code": "not found",
-                    "status_description": f"Plant for {tenant_id} not found",
-                    "detail":f"Plant for {tenant_id} not found",
-                }
-            }
-            
-            response.status_code = status.HTTP_404_NOT_FOUND
-            return results
+        tenant = await get_service_instance_per_tenant(tenant_id=tenant_id)
+        services = tenant['service_instances']
 
-        services = ServiceInstance.objects.filter(
-            tenant=tenant
-        )
         for service in services:
+            try:
+                config = await get_instance_and_upstream(service['id'], "metadata")
+            except HTTPException as e:
+                continue
+
+            # Use the custom_route if defined, otherwise fallback to the default route.
+            route_path = config.get("custom_route") or config.get("default_route")
+            target_url = config["api_base_url"].rstrip("/") + route_path
+
+            method = request.method
+            params = dict(request.query_params)
+            headers = dict(request.headers)
+            body = await request.body()
+
+            # Forward the request using HTTPX.
+            async with httpx.AsyncClient() as client:
+                try:
+                    response = await client.request(
+                        method=method,
+                        url=target_url,
+                        headers=headers,
+                        params=params,
+                        content=body,
+                        timeout=20.0
+                    )
+                    response.raise_for_status()
+
+                    print(response.text)
+                except httpx.HTTPError as exc:
+                    raise HTTPException(status_code=502, detail=f"Error forwarding request: {exc}")
+
             data.append(
                 {
-                    "id": service.pk,
-                    "name": service.instance_name,
-                    "status": "active" if service.is_active else "inactive",
-                    "description": service.description,
-                    "version": "v2.0.1",
-                    "environment": "development",
-                    "uptime": '15 days, 8 hours',
-                    "lastDeployed": '2025-01-10T14:30:00Z',
-                    "healthScore": 98,
-                    "cpu": 45,
-                    "memory": 62,
-                    "requests": 15420,
-                    "errors": 12,
-                    "tenantId": tenant.tenant_id,
-                    "is_active": service.is_active, 
+                    **response.json(),
+                    "id": service["id"],
+                    "name": service['service_name'],
+                    "description": service['description'],
                 }
             )
                 
